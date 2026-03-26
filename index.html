@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Livraisons — Madame Sonia</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0f1923;--paper:#faf8f4;--cream:#f2ede4;--gold:#c9933a;--gold-l:#f5e6cc;
+    --green:#2d6a4f;--green-l:#d8f3dc;--red:#9b2335;--red-l:#fce4e8;
+    --orange:#b5510a;--orange-l:#fdebd0;--blue:#1a3a5c;--blue-l:#dbeafe;
+    --muted:#7a7060;--line:#e2ddd5;--shadow:0 2px 16px rgba(15,25,35,.08);
+    --shadow-lg:0 8px 40px rgba(15,25,35,.14);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+  header{background:var(--ink);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{font-family:'DM Serif Display',serif;color:var(--gold);font-size:1.25rem}
+  .logo span{color:#fff;font-size:.85rem;font-family:'DM Sans',sans-serif;font-weight:300;margin-left:10px;opacity:.6}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .header-date{color:rgba(255,255,255,.45);font-size:.78rem}
+
+  /* SYNC INDICATOR */
+  .sync-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:.72rem;font-weight:700;border:1px solid;cursor:pointer;transition:all .2s}
+  .sync-pill.idle   {background:rgba(45,106,79,.12);color:#2d6a4f;border-color:rgba(45,106,79,.3)}
+  .sync-pill.syncing{background:rgba(201,147,58,.12);color:var(--orange);border-color:rgba(201,147,58,.3)}
+  .sync-pill.error  {background:rgba(155,35,53,.12);color:var(--red);border-color:rgba(155,35,53,.3)}
+  .sync-pill.nourl  {background:rgba(122,112,96,.1);color:var(--muted);border-color:var(--line)}
+  .sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .sync-dot.green {background:var(--green)}
+  .sync-dot.orange{background:var(--orange);animation:blink .8s infinite}
+  .sync-dot.red   {background:var(--red)}
+  .sync-dot.grey  {background:var(--muted)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .app{max-width:1100px;margin:0 auto;padding:32px 20px 80px;display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+  @media(max-width:780px){.app{grid-template-columns:1fr}}
+
+  /* CONFIG BANNER */
+  .config-banner{grid-column:1/-1;background:linear-gradient(135deg,#fff8ec,#fff);border:2px dashed var(--gold);border-radius:16px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px}
+  .config-banner.hidden{display:none}
+  .config-icon{font-size:1.8rem;flex-shrink:0}
+  .config-body{flex:1}
+  .config-title{font-family:'DM Serif Display',serif;font-size:1rem;margin-bottom:6px;color:var(--orange)}
+  .config-desc{font-size:.84rem;color:var(--muted);margin-bottom:12px;line-height:1.6}
+  .config-input-row{display:flex;gap:8px}
+  .config-input{flex:1;padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);background:var(--paper);outline:none}
+  .config-input:focus{border-color:var(--gold)}
+  .config-btn{padding:9px 18px;background:var(--ink);color:var(--gold);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap}
+
+  .card{background:#fff;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
+  .card-header{padding:18px 24px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .card-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:1.1rem;flex-shrink:0}
+  .card-title{font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--ink)}
+  .card-body{padding:22px 24px}
+  .field{margin-bottom:16px}
+  label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  input,select,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.92rem;color:var(--ink);background:var(--paper);transition:border-color .18s,box-shadow .18s;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,147,58,.12);background:#fff}
+  textarea{resize:vertical;min-height:60px}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .prix-display{background:var(--gold-l);border:1.5px solid var(--gold);border-radius:10px;padding:10px 14px;font-weight:600;color:var(--orange);font-size:1rem;letter-spacing:.01em;text-align:center}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-primary{background:var(--ink);color:var(--gold);letter-spacing:.02em}
+  .btn-primary:hover{background:#1e2f40;transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line);font-size:.82rem;padding:8px 14px;width:auto;border-radius:8px}
+  .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;grid-column:1/-1}
+  @media(max-width:600px){.kpi-strip{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi-label{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .kpi-value{font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--ink);line-height:1}
+  .kpi-sub{font-size:.78rem;color:var(--muted);margin-top:3px}
+  .kpi.green .kpi-value{color:var(--green)}.kpi.red .kpi-value{color:var(--red)}.kpi.gold .kpi-value{color:var(--orange)}
+  .list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .list-title{font-family:'DM Serif Display',serif;font-size:1.1rem}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .filter-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--line);background:transparent;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s}
+  .filter-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cmd-list{display:flex;flex-direction:column;gap:10px}
+  .cmd{border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:#fff;transition:box-shadow .18s,transform .18s;position:relative;overflow:hidden;animation:fadeUp .3s ease both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .cmd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+  .cmd.livré::before{background:var(--green)}.cmd.echec::before{background:var(--red)}.cmd.attente::before{background:var(--gold)}
+  .cmd:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+  .cmd-top{display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .cmd-num{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .cmd-badge{font-size:.7rem;font-weight:700;letter-spacing:.05em;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+  .badge-livré{background:var(--green-l);color:var(--green)}.badge-echec{background:var(--red-l);color:var(--red)}
+  .badge-attente{background:var(--gold-l);color:var(--orange)}.badge-reporté{background:var(--blue-l);color:var(--blue)}
+  .cmd-body{margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .cmd-client{font-weight:600;font-size:.95rem}.cmd-zone{font-size:.82rem;color:var(--muted)}
+  .cmd-montant{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--orange);white-space:nowrap}
+  .cmd-foot{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .cmd-info{font-size:.76rem;color:var(--muted)}
+  .cmd-actions{display:flex;gap:6px}
+  .act-btn{padding:5px 11px;border-radius:7px;border:1.5px solid var(--line);background:transparent;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s}
+  .act-btn.green{color:var(--green);border-color:var(--green-l)}.act-btn.green:hover{background:var(--green-l)}
+  .act-btn.red{color:var(--red);border-color:var(--red-l)}.act-btn.red:hover{background:var(--red-l)}
+  .act-btn.blue{color:var(--blue);border-color:var(--blue-l)}.act-btn.blue:hover{background:var(--blue-l)}
+  .act-btn.del{color:var(--muted);border-color:transparent}.act-btn.del:hover{color:var(--red);background:var(--red-l)}
+  .depot-dot{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .dot.ok{background:var(--green)}.dot.nok{background:var(--red)}.dot.na{background:var(--muted)}
+  .side{display:flex;flex-direction:column;gap:16px;position:sticky;top:80px}
+  .rapport-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+  .rapport-line:last-child{border-bottom:none}
+  .rapport-line .rl-label{color:var(--muted)}.rapport-line .rl-val{font-weight:600;color:var(--ink)}
+  .rapport-line.total .rl-label{font-weight:700;color:var(--ink)}.rapport-line.total .rl-val{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--green)}
+  .rapport-line.ecart .rl-val{color:var(--red)}
+  .empty{text-align:center;padding:48px 24px;color:var(--muted)}
+  .empty-icon{font-size:2.8rem;margin-bottom:12px}.empty-text{font-size:.9rem}
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--gold);padding:12px 24px;border-radius:12px;font-weight:600;font-size:.88rem;box-shadow:var(--shadow-lg);transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:999;white-space:nowrap}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .overlay{position:fixed;inset:0;background:rgba(15,25,35,.45);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:440px;box-shadow:var(--shadow-lg);animation:pop .25s cubic-bezier(.34,1.4,.64,1)}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-title{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:18px}
+  .modal-footer{display:flex;gap:10px;margin-top:20px}
+  .modal-footer .btn{flex:1}
+  .copy-rapport{width:100%;margin-top:12px;padding:10px;background:var(--cream);border:1.5px dashed var(--gold);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;color:var(--orange);cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+  .copy-rapport:hover{background:var(--gold-l)}
+  .sync-badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:8px;margin-left:6px}
+  .sync-badge.ok{background:var(--green-l);color:var(--green)}.sync-badge.no{background:var(--red-l);color:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Sonia Livraisons <span>Tableau de bord</span></div>
+  <div class="header-right">
+    <div class="sync-pill nourl" id="syncPill" onclick="openConfig()" title="Cliquez pour configurer Google Sheets">
+      <div class="sync-dot grey" id="syncDot"></div>
+      <span id="syncLabel">Google Sheets non configuré</span>
+    </div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- BANNER CONFIG -->
+  <div class="config-banner" id="configBanner">
+    <div class="config-icon">🔗</div>
+    <div class="config-body">
+      <div class="config-title">Connecter à Google Sheets</div>
+      <div class="config-desc">Collez ici l'URL de votre script Google Apps (WebApp URL). Toutes les commandes et dépôts seront automatiquement envoyés vers votre Google Sheet.</div>
+      <div class="config-input-row">
+        <input class="config-input" id="urlInput" type="url" placeholder="https://script.google.com/macros/s/VOTRE_ID/exec">
+        <button class="config-btn" onclick="saveUrl()">✦ Connecter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi gold"><div class="kpi-label">Commandes</div><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-sub">aujourd'hui</div></div>
+    <div class="kpi green"><div class="kpi-label">Livrées</div><div class="kpi-value" id="kpiLivrees">0</div><div class="kpi-sub" id="kpiPct">—</div></div>
+    <div class="kpi"><div class="kpi-label">Net à reverser</div><div class="kpi-value" id="kpiNet" style="font-size:1.2rem">0</div><div class="kpi-sub" id="kpiDepose">0 déposé</div></div>
+    <div class="kpi red"><div class="kpi-label">Dépôts manquants</div><div class="kpi-value" id="kpiManque">0</div><div class="kpi-sub">à régulariser</div></div>
+  </div>
+
+  <!-- COL GAUCHE -->
+  <div>
+    <div class="list-header">
+      <div class="list-title">Commandes du jour</div>
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('tous',this)">Toutes</button>
+        <button class="filter-btn" onclick="setFilter('attente',this)">En attente</button>
+        <button class="filter-btn" onclick="setFilter('livré',this)">Livrées</button>
+        <button class="filter-btn" onclick="setFilter('echec',this)">Échecs</button>
+      </div>
+    </div>
+    <div class="cmd-list" id="cmdList">
+      <div class="empty" id="emptyState"><div class="empty-icon">📦</div><div class="empty-text">Aucune commande.<br>Ajoutez votre première commande ci-contre.</div></div>
+    </div>
+  </div>
+
+  <!-- COL DROITE -->
+  <div class="side">
+    <div class="card">
+      <div class="card-header"><div class="card-icon" style="background:#faf0dc">➕</div><div class="card-title">Nouvelle commande</div></div>
+      <div class="card-body">
+        <div class="field-row">
+          <div class="field"><label>Zone / Client</label><input id="fZone" type="text" placeholder="Ex: Bastos…"></div>
+          <div class="field"><label>Téléphone</label><input id="fTel" type="tel" placeholder="+237…"></div>
+        </div>
+        <div class="field">
+          <label>Produit</label>
+          <select id="fProduit" onchange="calcPrix()">
+            <option value="">— Choisir —</option>
+            <option value="Masque Thé Vert">Masque Purifiant au Thé Vert</option>
+            <option value="Kit cafards">Kit anti-cafards</option>
+            <option value="Extension Robinet">Extension Robinet</option>
+            <option value="Autre">Autre produit</option>
+          </select>
+        </div>
+        <div class="field-row-3">
+          <div class="field"><label>Qté</label><select id="fQte" onchange="calcPrix()"><option>1</option><option>2</option><option>3</option></select></div>
+          <div class="field" style="grid-column:span 2"><label>Heure</label><input id="fHeure" type="time" value="12:00"></div>
+        </div>
+        <div class="field"><label>Montant à encaisser</label><div class="prix-display" id="prixDisplay">— FCFA</div></div>
+        <div class="field"><label>Prix personnalisé (optionnel)</label><input id="fPrixCustom" type="number" placeholder="Laisser vide = auto" oninput="calcPrix()"></div>
+        <div class="field"><label>Note</label><textarea id="fNote" rows="2" placeholder="Ex: livrer au mari…"></textarea></div>
+        <button class="btn btn-primary" onclick="addCmd()"><span>✦</span> Enregistrer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-icon" style="background:#e8f5e9">📊</div><div class="card-title">Rapport du jour</div></div>
+      <div class="card-body">
+        <div class="rapport-line"><span class="rl-label">Pièces sorties</span><span class="rl-val" id="rpPieces">0</span></div>
+        <div class="rapport-line"><span class="rl-label">Montant brut</span><span class="rl-val" id="rpBrut">0 FCFA</span></div>
+        <div class="rapport-line"><span class="rl-label">Commissions Félix</span><span class="rl-val" id="rpComm">0 FCFA</span></div>
+        <div class="rapport-line"><span class="rl-label">Échecs</span><span class="rl-val" id="rpEchec">0 FCFA</span></div>
+        <div class="rapport-line total"><span class="rl-label">Net à reverser</span><span class="rl-val" id="rpNet">0 FCFA</span></div>
+        <div class="rapport-line ecart"><span class="rl-label">Reste non déposé</span><span class="rl-val" id="rpEcart">0 FCFA</span></div>
+        <button class="copy-rapport" onclick="copyRapport()">📋 Copier le rapport WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉPÔT -->
+<div class="overlay" id="depotOverlay">
+  <div class="modal">
+    <div class="modal-title" id="depotTitle">Confirmer le dépôt</div>
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Montant net à déposer :</p>
+    <div class="prix-display" id="depotMontant" style="font-size:1.4rem;margin-bottom:16px"></div>
+    <div class="field"><label>Montant réellement déposé</label><input id="depotInput" type="number"></div>
+    <div class="field"><label>Capture envoyée ?</label>
+      <select id="depotCapture">
+        <option value="O">✅ Oui, capture envoyée</option>
+        <option value="N">❌ Non, pas encore</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDepot()">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmDepot()">✦ Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────
+let SCRIPT_URL = localStorage.getItem('sonia_script_url') || '';
+let commandes  = JSON.parse(localStorage.getItem('sonia_cmds') || '[]');
+let cmdCounter = parseInt(localStorage.getItem('sonia_counter') || '1');
+let currentFilter = 'tous';
+let currentDepotId = null;
+let depotCounter = parseInt(localStorage.getItem('sonia_depot_counter') || '1');
+
+const TARIFS = {
+  'Masque Thé Vert': {1:6000,2:10000,3:16000},
+  'Kit cafards':     {1:5000,2:9000, 3:13000},
+  'Extension Robinet':{1:10000,2:18000,3:26000},
+  'Autre':{}
+};
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('headerDate').textContent =
+    new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  updateSyncUI();
+  renderAll();
+}
+
+// ─── SYNC UI ──────────────────────────────────────────────────────────────
+function updateSyncUI() {
+  const pill  = document.getElementById('syncPill');
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  const banner = document.getElementById('configBanner');
+
+  if (!SCRIPT_URL) {
+    pill.className  = 'sync-pill nourl';
+    dot.className   = 'sync-dot grey';
+    label.textContent = '⚙️ Configurer Google Sheets';
+    banner.classList.remove('hidden');
+  } else {
+    pill.className  = 'sync-pill idle';
+    dot.className   = 'sync-dot green';
+    label.textContent = '✓ Connecté à Google Sheets';
+    banner.classList.add('hidden');
+  }
+}
+
+function setSyncing(on) {
+  const pill  = document.getElementById('syncPill');
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if (!SCRIPT_URL) return;
+  if (on) {
+    pill.className = 'sync-pill syncing';
+    dot.className  = 'sync-dot orange';
+    label.textContent = '↻ Synchronisation…';
+  } else {
+    pill.className = 'sync-pill idle';
+    dot.className  = 'sync-dot green';
+    label.textContent = '✓ Synchronisé';
+  }
+}
+
+function setSyncError() {
+  if (!SCRIPT_URL) return;
+  const pill  = document.getElementById('syncPill');
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  pill.className = 'sync-pill error';
+  dot.className  = 'sync-dot red';
+  label.textContent = '✗ Erreur sync';
+}
+
+function openConfig() {
+  document.getElementById('configBanner').classList.remove('hidden');
+  document.getElementById('urlInput').focus();
+}
+
+function saveUrl() {
+  const val = document.getElementById('urlInput').value.trim();
+  if (!val.startsWith('https://script.google.com')) {
+    showToast('⚠️  URL invalide — commencez par https://script.google.com');
+    return;
+  }
+  SCRIPT_URL = val;
+  localStorage.setItem('sonia_script_url', SCRIPT_URL);
+  updateSyncUI();
+  showToast('✅  Connecté à Google Sheets !');
+  // Sync immédiate de toutes les commandes existantes
+  if (commandes.length > 0) syncAll();
+}
+
+// ─── ENVOI VERS GOOGLE SHEETS ─────────────────────────────────────────────
+async function sendToSheets(action, data) {
+  if (!SCRIPT_URL) return;
+  setSyncing(true);
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',  // CORRECTION: avec no-cors, Content-Type doit être absent
+      // Ne pas spécifier Content-Type : no-cors force text/plain de toute façon
+      // Google Apps Script reçoit bien le JSON stringifié via e.postData.contents
+      body: JSON.stringify({ action, data })
+    });
+    setSyncing(false);
+  } catch (err) {
+    console.warn('Sync error:', err);
+    setSyncError();
+    setTimeout(() => updateSyncUI(), 3000);
+  }
+}
+
+async function syncAll() {
+  if (!SCRIPT_URL) return;
+  // CORRECTION: inclure les dépôts depuis localStorage
+  const depots = JSON.parse(localStorage.getItem('sonia_depots') || '[]');
+  await sendToSheets('sync_all', { commandes, depots });
+}
+
+// ─── PRIX ─────────────────────────────────────────────────────────────────
+function calcPrix() {
+  const prod   = document.getElementById('fProduit').value;
+  const qte    = parseInt(document.getElementById('fQte').value);
+  const custom = document.getElementById('fPrixCustom').value;
+  let prix = custom ? parseInt(custom) : (TARIFS[prod]?.[qte] || 0);
+  if (!prix && prod && qte > 3) prix = (TARIFS[prod]?.[1] || 6000) * qte;
+  document.getElementById('prixDisplay').textContent = prix > 0 ? prix.toLocaleString('fr-FR') + ' FCFA' : '— FCFA';
+  return prix;
+}
+
+// ─── ADD CMD ──────────────────────────────────────────────────────────────
+function addCmd() {
+  const zone  = document.getElementById('fZone').value.trim();
+  const tel   = document.getElementById('fTel').value.trim();
+  const prod  = document.getElementById('fProduit').value;
+  const qte   = parseInt(document.getElementById('fQte').value);
+  const heure = document.getElementById('fHeure').value;
+  const note  = document.getElementById('fNote').value.trim();
+  const prix  = calcPrix();
+  if (!zone || !prod || prix <= 0) { showToast('⚠️  Zone, produit et montant requis'); return; }
+
+  const id  = String(cmdCounter).padStart(3,'0');
+  const cmd = {
+    id, zone, tel, produit:prod, qte, heure, note, prix,
+    statut:'attente', depot:false, montantDepose:0, capture:false,
+    date: new Date().toLocaleDateString('fr-FR'),
+    ts: new Date().toISOString()
+  };
+  commandes.push(cmd);
+  cmdCounter++;
+  save();
+  resetForm();
+  renderAll();
+  showToast('✦  CMD-' + id + ' enregistrée — ' + zone);
+
+  // Envoi Google Sheets
+  sendToSheets('upsert_commande', cmd);
+  sendToSheets('log', { user:'Sonia', action:'Nouvelle commande', detail:`CMD-${id} / ${zone} / ${prix} FCFA`, statut:'créée' });
+}
+
+function resetForm() {
+  ['fZone','fTel','fNote','fPrixCustom'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('fProduit').value='';
+  document.getElementById('fQte').value='1';
+  document.getElementById('fHeure').value='12:00';
+  document.getElementById('prixDisplay').textContent='— FCFA';
+}
+
+// ─── STATUT ───────────────────────────────────────────────────────────────
+function setStatut(id, statut) {
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  cmd.statut = statut;
+  if (statut === 'echec') { cmd.depot = true; cmd.montantDepose = -500; }
+  save(); renderAll();
+  showToast(statut==='livré' ? '✅  Livraison confirmée !' : statut==='echec' ? '❌  Échec enregistré' : '🔄  Reportée');
+  sendToSheets('upsert_commande', cmd);
+  sendToSheets('log', { user:'Félix', action:'Statut mis à jour', detail:`CMD-${id} → ${statut}`, statut });
+  if (statut === 'livré') openDepot(id);
+}
+
+function deleteCmd(id) {
+  commandes = commandes.filter(c => c.id !== id);
+  save(); renderAll();
+  showToast('🗑  Supprimée');
+}
+
+// ─── DÉPÔT ────────────────────────────────────────────────────────────────
+function openDepot(id) {
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  currentDepotId = id;
+  document.getElementById('depotTitle').textContent = 'Dépôt — CMD-' + id + ' / ' + cmd.zone;
+  document.getElementById('depotMontant').textContent = (cmd.prix - 1500).toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('depotInput').value = cmd.prix - 1500;
+  document.getElementById('depotOverlay').classList.add('open');
+}
+
+function closeDepot() { document.getElementById('depotOverlay').classList.remove('open'); currentDepotId = null; }
+
+function confirmDepot() {
+  if (!currentDepotId) return;
+  const cmd = commandes.find(c => c.id === currentDepotId);
+  if (!cmd) return;
+  cmd.depot = true;
+  cmd.montantDepose = parseInt(document.getElementById('depotInput').value) || 0;
+  cmd.capture = document.getElementById('depotCapture').value === 'O';
+
+  // CORRECTION #9 : générer et stocker l'ID dépôt dans la commande
+  const depId = 'DEP-' + String(depotCounter).padStart(3,'0');
+  depotCounter++;
+  localStorage.setItem('sonia_depot_counter', depotCounter);
+  cmd.depotId = depId; // lien commande → dépôt
+
+  // Stocker le dépôt dans localStorage pour syncAll
+  const depotObj = {
+    depotId: depId,
+    cmdRef: 'CMD-' + currentDepotId,
+    montant: cmd.montantDepose,
+    mode: 'Orange Money',
+    capture: cmd.capture,
+    valide: false,
+    note: 'Dépôt CMD-' + currentDepotId + ' / ' + cmd.zone,
+    date: new Date().toLocaleDateString('fr-FR')
+  };
+  const depots = JSON.parse(localStorage.getItem('sonia_depots') || '[]');
+  depots.push(depotObj);
+  localStorage.setItem('sonia_depots', JSON.stringify(depots));
+
+  save(); renderAll(); closeDepot();
+  showToast(cmd.capture ? '💰  Dépôt + capture confirmés !' : '💰  Dépôt confirmé !');
+
+  sendToSheets('upsert_commande', cmd);
+  sendToSheets('upsert_depot', depotObj);
+  sendToSheets('log', { user:'Félix', action:'Dépôt', detail:`${depId} — ${cmd.montantDepose.toLocaleString('fr-FR')} FCFA`, statut: cmd.capture?'Avec capture':'Sans capture' });
+}
+
+// ─── FILTER / RENDER ──────────────────────────────────────────────────────
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function renderAll() { renderList(); updateKpis(); updateRapport(); }
+
+function renderList() {
+  const list = document.getElementById('cmdList');
+  const empty = document.getElementById('emptyState');
+  list.querySelectorAll('.cmd').forEach(el => el.remove());
+  let filtered = currentFilter === 'tous' ? commandes : commandes.filter(c => c.statut === currentFilter);
+  if (!filtered.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  [...filtered].reverse().forEach(cmd => list.appendChild(buildCmdEl(cmd)));
+}
+
+function buildCmdEl(cmd) {
+  const badgeClass = {livré:'badge-livré',echec:'badge-echec',reporté:'badge-reporté'}[cmd.statut] || 'badge-attente';
+  const badgeLabel = {livré:'✅ Livré',echec:'❌ Échec',reporté:'🔄 Reporté'}[cmd.statut] || '⏳ En attente';
+  const syncMark = SCRIPT_URL ? `<span class="sync-badge ok">☁️ Sheets</span>` : '';
+  const depotDot = cmd.statut !== 'attente' && cmd.statut !== 'reporté'
+    ? `<span class="depot-dot"><span class="dot ${cmd.depot?'ok':'nok'}"></span>${cmd.depot?'Déposé':'Dépôt manquant'} ${cmd.capture?'📎':''}</span>` : '';
+  const div = document.createElement('div');
+  div.className = `cmd ${cmd.statut}`;
+  div.innerHTML = `
+    <div class="cmd-top">
+      <span class="cmd-num">CMD-${cmd.id} · ${cmd.heure}${syncMark}</span>
+      <span class="cmd-badge ${badgeClass}">${badgeLabel}</span>
+    </div>
+    <div class="cmd-body">
+      <div><div class="cmd-client">${cmd.zone}</div><div class="cmd-zone">${cmd.produit} × ${cmd.qte}${cmd.tel?' · '+cmd.tel:''}</div></div>
+      <div class="cmd-montant">${cmd.prix.toLocaleString('fr-FR')} FCFA</div>
+    </div>
+    ${cmd.note?`<div style="font-size:.78rem;color:var(--muted);margin-top:6px;font-style:italic">📝 ${cmd.note}</div>`:''}
+    <div class="cmd-foot">
+      <div class="cmd-info">${depotDot}</div>
+      <div class="cmd-actions">
+        ${cmd.statut==='attente'?`
+          <button class="act-btn green" onclick="setStatut('${cmd.id}','livré')">✓ Livré</button>
+          <button class="act-btn red"   onclick="setStatut('${cmd.id}','echec')">✗ Échec</button>
+          <button class="act-btn blue"  onclick="setStatut('${cmd.id}','reporté')">↷ Reporter</button>`:''}
+        ${cmd.statut==='livré'&&!cmd.depot?`<button class="act-btn green" onclick="openDepot('${cmd.id}')">💰 Dépôt</button>`:''}
+        ${cmd.statut==='reporté'?`<button class="act-btn green" onclick="setStatut('${cmd.id}','attente')">↺ Relancer</button>`:''}
+        <button class="act-btn del" onclick="deleteCmd('${cmd.id}')">🗑</button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function updateKpis() {
+  const l = commandes.filter(c=>c.statut==='livré').length;
+  const t = commandes.length;
+  const net = commandes.filter(c=>c.statut==='livré').reduce((s,c)=>s+c.prix-1500,0) - commandes.filter(c=>c.statut==='echec').length*500;
+  const dep = commandes.filter(c=>c.depot&&c.montantDepose>0).reduce((s,c)=>s+c.montantDepose,0);
+  const mq  = commandes.filter(c=>c.statut==='livré'&&!c.depot).length;
+  document.getElementById('kpiTotal').textContent = t;
+  document.getElementById('kpiLivrees').textContent = l;
+  document.getElementById('kpiPct').textContent = t>0 ? Math.round(l/t*100)+'% succès' : '—';
+  document.getElementById('kpiNet').textContent = net.toLocaleString('fr-FR')+' FCFA';
+  document.getElementById('kpiDepose').textContent = dep.toLocaleString('fr-FR')+' FCFA déposé';
+  document.getElementById('kpiManque').textContent = mq;
+}
+
+function updateRapport() {
+  const l=commandes.filter(c=>c.statut==='livré');
+  const e=commandes.filter(c=>c.statut==='echec');
+  const pieces=l.reduce((s,c)=>s+c.qte,0);
+  const brut=l.reduce((s,c)=>s+c.prix,0);
+  const comm=l.length*1500; const fE=e.length*500;
+  const net=brut-comm-fE;
+  const dep=commandes.filter(c=>c.depot&&c.montantDepose>0).reduce((s,c)=>s+c.montantDepose,0);
+  const ecart=net-dep;
+  document.getElementById('rpPieces').textContent=pieces;
+  document.getElementById('rpBrut').textContent=brut.toLocaleString('fr-FR')+' FCFA';
+  document.getElementById('rpComm').textContent='-'+comm.toLocaleString('fr-FR')+' FCFA';
+  document.getElementById('rpEchec').textContent=fE>0?'-'+fE.toLocaleString('fr-FR')+' FCFA':'0 FCFA';
+  document.getElementById('rpNet').textContent=net.toLocaleString('fr-FR')+' FCFA';
+  document.getElementById('rpEcart').textContent=ecart.toLocaleString('fr-FR')+' FCFA';
+  document.getElementById('rpEcart').style.color=ecart>0?'var(--red)':'var(--green)';
+}
+
+function copyRapport() {
+  const now=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  const l=commandes.filter(c=>c.statut==='livré');
+  const e=commandes.filter(c=>c.statut==='echec');
+  const brut=l.reduce((s,c)=>s+c.prix,0);
+  const comm=l.length*1500; const fE=e.length*500;
+  const net=brut-comm-fE;
+  const dep=commandes.filter(c=>c.depot&&c.montantDepose>0).reduce((s,c)=>s+c.montantDepose,0);
+  let lines=[`📊 *RAPPORT DU ${now.toUpperCase()}*\n`];
+  l.forEach(c=>lines.push(`- ${c.zone}\nColis livré ✅ = ${c.prix.toLocaleString('fr-FR')} - 1 500 = ${(c.prix-1500).toLocaleString('fr-FR')} FCFA`));
+  e.forEach(c=>lines.push(`- ${c.zone}\nÉchec ❌ = 0 - 500 = -500 FCFA`));
+  lines.push(`\nPièces sorties : ${l.reduce((s,c)=>s+c.qte,0)}`);
+  lines.push(`*Total net : ${net.toLocaleString('fr-FR')} FCFA*`);
+  lines.push(`Déposé : ${dep.toLocaleString('fr-FR')} FCFA`);
+  if (net-dep>0) lines.push(`⚠️ Reste : ${(net-dep).toLocaleString('fr-FR')} FCFA`);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>showToast('📋  Rapport copié !')).catch(()=>showToast('Copiez manuellement'));
+}
+
+function save() {
+  localStorage.setItem('sonia_cmds', JSON.stringify(commandes));
+  localStorage.setItem('sonia_counter', String(cmdCounter));
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+document.getElementById('depotOverlay').addEventListener('click',function(e){if(e.target===this)closeDepot()});
+init();
+</script>
+</body>
+</html>

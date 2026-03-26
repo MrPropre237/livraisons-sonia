@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Félix — Livreur</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --surface2: #1c2330;
+  --border:   #30363d;
+  --green:    #3fb950;
+  --green-d:  #238636;
+  --green-l:  rgba(63,185,80,.13);
+  --red:      #f85149;
+  --red-l:    rgba(248,81,73,.13);
+  --orange:   #e3b341;
+  --orange-l: rgba(227,179,65,.13);
+  --blue:     #58a6ff;
+  --blue-l:   rgba(88,166,255,.13);
+  --muted:    #8b949e;
+  --text:     #e6edf3;
+  --text2:    #c9d1d9;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 88px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* TOP BAR */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(13,17,23,.94);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 13px 16px 11px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand-name { font-family:'Syne',sans-serif; font-size:1.15rem; font-weight:800; letter-spacing:-.02em; }
+.brand-date { font-size:.7rem; color:var(--muted); font-weight:600; margin-top:2px; }
+.rider-pill {
+  display:flex; align-items:center; gap:7px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:5px 12px 5px 6px;
+}
+.rider-av { width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--green),#1e7a32); display:grid; place-items:center; font-size:.8rem; font-weight:800; color:#fff; }
+.rider-nm { font-size:.76rem; font-weight:700; color:var(--text2); }
+
+/* KPI */
+.kpi-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:14px 14px 0; }
+.kpi { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:13px 10px; text-align:center; }
+.kpi-v { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; line-height:1; margin-bottom:4px; }
+.kpi-l { font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); }
+.kpi.g .kpi-v { color:var(--green); }
+.kpi.o .kpi-v { color:var(--orange); }
+.kpi.r .kpi-v { color:var(--red); }
+
+/* ALERT */
+.alert { margin:12px 14px 0; border-radius:14px; padding:11px 14px; display:flex; gap:10px; align-items:center; font-size:.82rem; font-weight:700; }
+.alert.warn { background:var(--red-l); border:1px solid rgba(248,81,73,.3); color:var(--red); }
+.alert.good { background:var(--green-l); border:1px solid rgba(63,185,80,.3); color:var(--green); }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.35} }
+.pulse { animation:pulse 1.8s ease infinite; }
+
+/* TABS */
+.tabs { display:flex; gap:8px; padding:14px 14px 0; overflow-x:auto; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { flex-shrink:0; padding:7px 16px; border-radius:20px; border:1px solid var(--border); background:transparent; font-family:'Nunito',sans-serif; font-size:.78rem; font-weight:700; color:var(--muted); cursor:pointer; transition:all .15s; }
+.tab.active { background:var(--green); border-color:var(--green); color:#fff; }
+.tab:hover:not(.active) { color:var(--text); }
+
+/* CARDS */
+.cards { padding:12px 14px 0; display:flex; flex-direction:column; gap:12px; }
+.cmd { background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; animation:up .28s ease both; }
+@keyframes up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.cmd-stripe { height:3px; }
+.cmd.attente .cmd-stripe { background:linear-gradient(90deg,var(--orange),#f0a500); }
+.cmd.livré   .cmd-stripe { background:linear-gradient(90deg,var(--green),#1e8c36); }
+.cmd.echec   .cmd-stripe { background:linear-gradient(90deg,var(--red),#c0392b); }
+.cmd.reporté .cmd-stripe { background:linear-gradient(90deg,var(--blue),#2776c6); }
+.cmd-bd { padding:15px; }
+.cmd-row1 { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.cmd-id { font-size:.66rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.cmd-time { font-size:.7rem; font-weight:700; background:var(--surface2); padding:3px 9px; border-radius:8px; color:var(--text2); }
+.cmd-zone { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; letter-spacing:-.02em; margin-bottom:4px; }
+.cmd-prod { font-size:.76rem; color:var(--muted); font-weight:600; margin-bottom:12px; }
+.cmd-money { background:var(--surface2); border-radius:12px; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.money-lbl { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.money-val { font-family:'Syne',sans-serif; font-size:1.25rem; font-weight:800; color:var(--orange); }
+.money-net { font-size:.7rem; color:var(--green); font-weight:700; margin-top:2px; }
+.cmd-note { background:var(--orange-l); border:1px solid rgba(227,179,65,.22); border-radius:10px; padding:8px 12px; font-size:.78rem; font-weight:700; color:var(--orange); margin-bottom:12px; display:flex; gap:6px; }
+.cmd-tel { display:flex; gap:8px; margin-bottom:12px; }
+.tel-box { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:.9rem; font-weight:700; color:var(--blue); }
+.tel-btn { width:42px; height:42px; border-radius:10px; background:var(--blue-l); border:1px solid rgba(88,166,255,.25); display:grid; place-items:center; font-size:1.1rem; cursor:pointer; text-decoration:none; flex-shrink:0; transition:background .15s; }
+.tel-btn:active { background:rgba(88,166,255,.25); }
+
+/* Actions */
+.acts { display:flex; gap:8px; }
+.act { flex:1; padding:13px 6px; border-radius:13px; border:none; font-family:'Nunito',sans-serif; font-size:.8rem; font-weight:800; cursor:pointer; transition:all .15s; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.act span { font-size:1.2rem; }
+.act.g { background:var(--green-l); color:var(--green); border:1px solid rgba(63,185,80,.3); }
+.act.r { background:var(--red-l); color:var(--red); border:1px solid rgba(248,81,73,.3); }
+.act.b { background:var(--blue-l); color:var(--blue); border:1px solid rgba(88,166,255,.3); }
+.act:active { transform:scale(.95); }
+
+.done-banner { border-radius:12px; padding:11px 14px; font-size:.86rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+.done-banner.g { background:var(--green-l); color:var(--green); border:1px solid rgba(63,185,80,.25); }
+.done-banner.r { background:var(--red-l); color:var(--red); border:1px solid rgba(248,81,73,.25); }
+.done-banner.b { background:var(--blue-l); color:var(--blue); border:1px solid rgba(88,166,255,.25); }
+
+.depot-tag { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:8px; font-size:.72rem; font-weight:700; margin-top:8px; }
+.depot-tag.ok  { background:var(--green-l); color:var(--green); }
+.depot-tag.nok { background:var(--red-l); color:var(--red); }
+
+.depot-act { width:100%; margin-top:8px; padding:12px; border-radius:12px; border:1px solid rgba(63,185,80,.3); background:var(--green-l); color:var(--green); font-family:'Nunito',sans-serif; font-size:.84rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; }
+.depot-act:active { background:rgba(63,185,80,.22); transform:scale(.98); }
+.relance-act { width:100%; margin-top:8px; padding:12px; border-radius:12px; border:1px solid rgba(88,166,255,.3); background:var(--blue-l); color:var(--blue); font-family:'Nunito',sans-serif; font-size:.84rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; }
+.relance-act:active { transform:scale(.98); }
+
+/* EMPTY */
+.empty { text-align:center; padding:56px 24px; }
+.empty-icon { font-size:3rem; margin-bottom:14px; }
+.empty-t { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; color:var(--text2); margin-bottom:6px; }
+.empty-d { font-size:.84rem; color:var(--muted); line-height:1.6; }
+
+/* RAPPORT VIEW */
+.rpt-card { margin:14px 14px 0; background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
+.rpt-head { padding:13px 16px; border-bottom:1px solid var(--border); font-family:'Syne',sans-serif; font-size:.95rem; font-weight:700; }
+.rpt-row { display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:1px solid rgba(48,54,61,.5); font-size:.9rem; }
+.rpt-row:last-child { border-bottom:none; }
+.rpt-row .lbl { color:var(--muted); font-weight:600; }
+.rpt-row .val { font-weight:800; }
+.rpt-row.big { background:var(--surface2); }
+.rpt-row.big .lbl { color:var(--text2); font-weight:700; }
+.rpt-row.big .val { font-family:'Syne',sans-serif; font-size:1.05rem; color:var(--green); }
+.rpt-msg { margin:12px 14px 0; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:14px; font-family:monospace; font-size:.78rem; line-height:1.9; color:var(--text2); white-space:pre-wrap; word-break:break-word; }
+.rpt-msg .hl  { color:var(--orange); font-weight:700; }
+.rpt-msg .ok  { color:var(--green); }
+.rpt-msg .err { color:var(--red); }
+.copy-btn { width:calc(100% - 28px); margin:12px 14px; padding:14px; background:var(--green); border:none; border-radius:14px; font-family:'Nunito',sans-serif; font-size:.94rem; font-weight:800; color:#fff; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.copy-btn:active { background:var(--green-d); transform:scale(.98); }
+
+/* STOCK VIEW */
+.stock-card { margin:14px 14px 0; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px; }
+.sec-lbl { font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+.stock-main { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.stock-num { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; line-height:1; }
+.stock-sub { font-size:.82rem; color:var(--muted); font-weight:600; margin-top:4px; }
+.stock-btns { display:flex; flex-direction:column; gap:8px; }
+.sbtn { width:46px; height:46px; border-radius:12px; font-size:1.5rem; font-weight:700; cursor:pointer; border:none; display:grid; place-items:center; transition:all .15s; }
+.sbtn.plus  { background:var(--green-l); color:var(--green); border:1px solid rgba(63,185,80,.3); }
+.sbtn.minus { background:var(--red-l); color:var(--red); border:1px solid rgba(248,81,73,.3); }
+.sbtn:active { transform:scale(.92); }
+.stock-manual { background:var(--surface2); border-radius:12px; padding:12px 14px; }
+.stock-manual .sm-lbl { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px; }
+.stock-manual .sm-row { display:flex; gap:8px; }
+.stock-manual input { flex:1; padding:11px 12px; background:var(--bg); border:1.5px solid var(--border); border-radius:10px; font-family:'Nunito',sans-serif; font-size:.94rem; font-weight:700; color:var(--text); outline:none; }
+.stock-manual input:focus { border-color:var(--green); }
+.stock-manual button { padding:11px 18px; background:var(--green); border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:.86rem; font-weight:800; color:#fff; cursor:pointer; }
+.stock-tip { margin:12px 14px 0; background:var(--orange-l); border:1px solid rgba(227,179,65,.25); border-radius:14px; padding:14px; }
+.stock-tip .tip-t { font-size:.8rem; font-weight:700; color:var(--orange); margin-bottom:4px; }
+.stock-tip .tip-d { font-size:.78rem; color:var(--muted); line-height:1.6; }
+.week-card { margin:12px 14px 0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; }
+.week-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(48,54,61,.5); font-size:.86rem; }
+.week-row:last-child { border-bottom:none; }
+
+/* BOTTOM NAV */
+.bnav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(22,27,34,.96); backdrop-filter:blur(14px); border-top:1px solid var(--border); display:flex; padding:10px 0 18px; z-index:100; }
+.bnav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; border:none; background:transparent; font-family:'Nunito',sans-serif; padding:6px 0; transition:all .15s; }
+.bnav-icon { font-size:1.25rem; transition:transform .2s; }
+.bnav-lbl { font-size:.62rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.bnav-item.active .bnav-icon { transform:scale(1.2); }
+.bnav-item.active .bnav-lbl { color:var(--green); }
+
+/* VIEWS */
+.view { display:none; }
+.view.active { display:block; }
+
+/* MODAL */
+.overlay { position:fixed; inset:0; background:rgba(1,4,9,.85); backdrop-filter:blur(8px); z-index:200; display:none; align-items:flex-end; justify-content:center; }
+.overlay.open { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:24px 24px 0 0; padding:20px 18px 36px; width:100%; max-width:480px; animation:slideUp .3s cubic-bezier(.34,1.2,.64,1); }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 18px; }
+.modal-t { font-family:'Syne',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:4px; }
+.modal-sub { font-size:.84rem; color:var(--muted); font-weight:600; margin-bottom:16px; }
+.modal-amount { background:var(--green-l); border:1px solid rgba(63,185,80,.3); border-radius:14px; padding:16px; text-align:center; margin-bottom:16px; }
+.modal-amount .ml { font-size:.68rem; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.modal-amount .mv { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; color:var(--green); }
+.mfield { margin-bottom:14px; }
+.mfield label { display:block; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
+.mfield input { width:100%; padding:13px 14px; background:var(--surface2); border:1.5px solid var(--border); border-radius:12px; font-family:'Nunito',sans-serif; font-size:.95rem; font-weight:700; color:var(--text); outline:none; }
+.mfield input:focus { border-color:var(--green); }
+.cap-lbl { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px; }
+.capture-btns { display:flex; gap:8px; margin-bottom:16px; }
+.cap { flex:1; padding:13px; border-radius:12px; border:2px solid var(--border); background:transparent; font-family:'Nunito',sans-serif; font-size:.84rem; font-weight:800; color:var(--muted); cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+.cap.sel-ok  { border-color:var(--green); background:var(--green-l); color:var(--green); }
+.cap.sel-no  { border-color:var(--red);   background:var(--red-l);   color:var(--red); }
+.cap:active { transform:scale(.96); }
+.modal-ok { width:100%; padding:15px; background:var(--green); border:none; border-radius:14px; font-family:'Nunito',sans-serif; font-size:.96rem; font-weight:800; color:#fff; cursor:pointer; transition:all .15s; }
+.modal-ok:active { background:var(--green-d); transform:scale(.98); }
+.modal-cancel { width:100%; padding:12px; background:transparent; border:none; font-family:'Nunito',sans-serif; font-size:.86rem; font-weight:700; color:var(--muted); cursor:pointer; margin-top:8px; }
+
+/* TOAST */
+.toast { position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-80px); background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:11px 20px; border-radius:14px; font-weight:700; font-size:.84rem; box-shadow:0 8px 32px rgba(0,0,0,.5); transition:transform .32s cubic-bezier(.34,1.4,.64,1); z-index:500; white-space:nowrap; display:flex; align-items:center; gap:8px; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+.view-title { padding:16px 14px 8px; font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="brand-name">🏍️ Mes Livraisons</div>
+    <div class="brand-date" id="topDate">—</div>
+  </div>
+  <div class="rider-pill">
+    <div class="rider-av">F</div>
+    <div class="rider-nm">Ange Félix</div>
+  </div>
+</div>
+
+<!-- ════════ VUE LIVRAISONS ════════ -->
+<div class="view active" id="view-livraisons">
+
+  <div class="kpi-strip">
+    <div class="kpi o"><div class="kpi-v" id="kTotal">0</div><div class="kpi-l">Total</div></div>
+    <div class="kpi g"><div class="kpi-v" id="kLiv">0</div><div class="kpi-l">Livrées</div></div>
+    <div class="kpi r"><div class="kpi-v" id="kEch">0</div><div class="kpi-l">Échecs</div></div>
+  </div>
+
+  <div class="alert" id="alertEl" style="display:none">
+    <span id="alertIcon" class="pulse">⚠️</span>
+    <span id="alertMsg"></span>
+  </div>
+
+  <div class="tabs" style="margin-top:14px">
+    <button class="tab active" onclick="setFilter('tous',this)">Toutes</button>
+    <button class="tab" onclick="setFilter('attente',this)">⏳ En attente</button>
+    <button class="tab" onclick="setFilter('livré',this)">✅ Livrées</button>
+    <button class="tab" onclick="setFilter('echec',this)">❌ Échecs</button>
+    <button class="tab" onclick="setFilter('reporté',this)">🔄 Reportées</button>
+  </div>
+
+  <div class="cards" id="cardList">
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">📭</div>
+      <div class="empty-t">Aucune commande</div>
+      <div class="empty-d">Madame Sonia n'a pas encore<br>envoyé de commandes aujourd'hui.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════ VUE RAPPORT ════════ -->
+<div class="view" id="view-rapport">
+  <div class="view-title">📊 Rapport du jour</div>
+
+  <div class="rpt-card">
+    <div class="rpt-head">Récapitulatif automatique</div>
+    <div class="rpt-row"><span class="lbl">Pièces sorties</span><span class="val" id="rPieces">0</span></div>
+    <div class="rpt-row"><span class="lbl">Montant brut</span><span class="val" id="rBrut">0 FCFA</span></div>
+    <div class="rpt-row"><span class="lbl">Ma commission</span><span class="val" style="color:var(--orange)" id="rComm">0 FCFA</span></div>
+    <div class="rpt-row"><span class="lbl">Frais échecs</span><span class="val" style="color:var(--red)" id="rEch">0 FCFA</span></div>
+    <div class="rpt-row big"><span class="lbl">Net à reverser</span><span class="val" id="rNet">0 FCFA</span></div>
+    <div class="rpt-row"><span class="lbl">Reste à déposer</span><span class="val" id="rEcart">0 FCFA</span></div>
+  </div>
+
+  <div class="view-title">Message WhatsApp</div>
+  <div class="rpt-msg" id="rptMsg">— Aucune livraison —</div>
+  <button class="copy-btn" onclick="copyRapport()">📋 Copier — coller dans WhatsApp</button>
+</div>
+
+<!-- ════════ VUE STOCK ════════ -->
+<div class="view" id="view-stock">
+  <div class="view-title">📦 Mon stock</div>
+
+  <div class="stock-card">
+    <div class="sec-lbl">Pièces disponibles</div>
+    <div class="stock-main">
+      <div>
+        <div class="stock-num" id="stockNum">0</div>
+        <div class="stock-sub">pièces en ma possession</div>
+      </div>
+      <div class="stock-btns">
+        <button class="sbtn plus"  onclick="adjStock(1)">+</button>
+        <button class="sbtn minus" onclick="adjStock(-1)">−</button>
+      </div>
+    </div>
+    <div class="stock-manual">
+      <div class="sm-lbl">Définir manuellement</div>
+      <div class="sm-row">
+        <input type="number" id="stockIn" inputmode="numeric" placeholder="Ex: 15" min="0">
+        <button onclick="setStockManual()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stock-tip">
+    <div class="tip-t">📸 Rappel — chaque lundi matin</div>
+    <div class="tip-d">Envoyez une photo de votre stock dans WhatsApp avant de recevoir les nouvelles commandes de la semaine.</div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;margin:0 16px">
+    <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">☁️ Google Sheets</div>
+    <div id="sheetBadge" style="font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:10px">⚙️ Non configuré</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.5">Collez l'URL du script de Madame Sonia pour synchroniser automatiquement vos actions.</div>
+    <div style="display:flex;gap:8px">
+      <input id="sheetUrlInput" type="url" placeholder="https://script.google.com/…"
+        style="flex:1;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:600;color:var(--text);outline:none">
+      <button onclick="saveSheetUrl(document.getElementById('sheetUrlInput').value.trim())"
+        style="padding:10px 14px;background:var(--green);border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:800;color:#fff;cursor:pointer">
+        OK
+      </button>
+    </div>
+  </div>
+
+  <div class="week-card">
+    <div class="sec-lbl">Résumé d'activité</div>
+    <div class="week-row"><span style="color:var(--muted);font-weight:600">Pièces livrées</span><span style="font-weight:800" id="wPieces">0</span></div>
+    <div class="week-row"><span style="color:var(--muted);font-weight:600">Commission gagnée</span><span style="font-weight:800;color:var(--orange)" id="wComm">0 FCFA</span></div>
+    <div class="week-row"><span style="color:var(--muted);font-weight:600">Dépôts effectués</span><span style="font-weight:800;color:var(--green)" id="wDepot">0 FCFA</span></div>
+    <div class="week-row"><span style="color:var(--muted);font-weight:600">Dépôts manquants</span><span style="font-weight:800;color:var(--red)" id="wManque">0</span></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bnav-item active" id="nav-livraisons" onclick="switchView('livraisons')">
+    <span class="bnav-icon">🏍️</span><span class="bnav-lbl">Livraisons</span>
+  </button>
+  <button class="bnav-item" id="nav-rapport" onclick="switchView('rapport')">
+    <span class="bnav-icon">📊</span><span class="bnav-lbl">Rapport</span>
+  </button>
+  <button class="bnav-item" id="nav-stock" onclick="switchView('stock')">
+    <span class="bnav-icon">📦</span><span class="bnav-lbl">Stock</span>
+  </button>
+</nav>
+
+<!-- MODAL DÉPÔT -->
+<div class="overlay" id="depotOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-t" id="mTitle">Confirmer le dépôt</div>
+    <div class="modal-sub" id="mSub"></div>
+    <div class="modal-amount">
+      <div class="ml">Net à déposer</div>
+      <div class="mv" id="mVal">—</div>
+    </div>
+    <div class="mfield">
+      <label>Montant réellement envoyé (FCFA)</label>
+      <input type="number" id="mInput" inputmode="numeric" placeholder="Ex: 4 500">
+    </div>
+    <div class="cap-lbl">Capture envoyée dans WhatsApp ?</div>
+    <div class="capture-btns">
+      <button class="cap" id="capOui" onclick="selCap('oui')">✅ Oui, envoyée</button>
+      <button class="cap" id="capNon" onclick="selCap('non')">❌ Pas encore</button>
+    </div>
+    <button class="modal-ok" onclick="confirmDepot()">✦ Valider le dépôt</button>
+    <button class="modal-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let cmds    = [];
+let stock      = parseInt(localStorage.getItem('felix_stock') || '0');
+let FELIX_URL  = localStorage.getItem('felix_script_url') || '';
+
+async function sendToSheets(action, data) {
+  if (!FELIX_URL) return;
+  try {
+    await fetch(FELIX_URL, { method:'POST', mode:'no-cors', body: JSON.stringify({action, data}) });
+  } catch(e) { console.warn('Sheets sync:', e); }
+}
+function saveSheetUrl(url) {
+  if (!url || !url.startsWith('https://script.google.com')) { showToast('⚠️ URL invalide'); return; }
+  FELIX_URL = url; localStorage.setItem('felix_script_url', FELIX_URL);
+  updateSheetBadge(); showToast('✅ Connecté à Google Sheets !');
+}
+function updateSheetBadge() {
+  const b = document.getElementById('sheetBadge');
+  if (!b) return;
+  b.textContent = FELIX_URL ? '☁️ Sheets connecté' : '⚙️ Non configuré';
+  b.style.color = FELIX_URL ? 'var(--green)' : 'var(--muted)';
+}
+let filter  = 'tous';
+let depotId = null;
+let capSel  = null;
+const COMM  = 1500;
+const FRAIS = 500;
+
+// INIT
+(function() {
+  document.getElementById('topDate').textContent =
+    new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('stockNum').textContent = stock;
+  syncAndRender();
+  setInterval(syncAndRender, 3000);
+})();
+
+function syncAndRender() {
+  const fresh = JSON.parse(localStorage.getItem('sonia_cmds') || '[]');
+  if (JSON.stringify(fresh) !== JSON.stringify(cmds)) { cmds = fresh; renderAll(); }
+}
+function saveCmds() { localStorage.setItem('sonia_cmds', JSON.stringify(cmds)); }
+
+// VIEWS
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(e => e.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.getElementById('nav-' + v).classList.add('active');
+  if (v === 'rapport') buildRapport();
+  if (v === 'stock')   buildStock();
+}
+
+// FILTER
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+// RENDER
+function renderAll() { renderCards(); updateKpis(); updateAlert(); }
+
+function renderCards() {
+  const list  = document.getElementById('cardList');
+  const empty = document.getElementById('emptyState');
+  list.querySelectorAll('.cmd').forEach(e => e.remove());
+
+  let filtered = filter === 'tous' ? [...cmds] : cmds.filter(c => c.statut === filter);
+
+  if (!filtered.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  filtered.forEach((cmd, i) => {
+    const el = buildCard(cmd);
+    el.style.animationDelay = (i * 0.04) + 's';
+    list.appendChild(el);
+  });
+}
+
+function buildCard(cmd) {
+  const net = cmd.prix - COMM;
+  const div = document.createElement('div');
+  div.className = `cmd ${cmd.statut}`;
+
+  let bottom = '';
+  if (cmd.statut === 'attente') {
+    bottom = `<div class="acts">
+      <button class="act g" onclick="doStatut('${cmd.id}','livré')"><span>✅</span>Livré</button>
+      <button class="act r" onclick="doStatut('${cmd.id}','echec')"><span>❌</span>Échec</button>
+      <button class="act b" onclick="doStatut('${cmd.id}','reporté')"><span>🔄</span>Reporter</button>
+    </div>`;
+  } else if (cmd.statut === 'livré') {
+    const pill = cmd.depot
+      ? `<div class="depot-tag ok">✓ Déposé${cmd.capture ? ' · Capture ✓' : ' · Capture manquante ⚠️'}</div>`
+      : `<button class="depot-act" onclick="openDepot('${cmd.id}')">💰 Faire le dépôt maintenant</button>`;
+    bottom = `<div class="done-banner g">✅ Colis remis au client</div>${pill}`;
+  } else if (cmd.statut === 'echec') {
+    bottom = `<div class="done-banner r">❌ Client absent — 500 FCFA déduits</div>`;
+  } else if (cmd.statut === 'reporté') {
+    bottom = `<div class="done-banner b">🔄 Reporté — relancez quand le client est prêt</div>
+      <button class="relance-act" onclick="doStatut('${cmd.id}','attente')">↺ Relancer maintenant</button>`;
+  }
+
+  div.innerHTML = `
+    <div class="cmd-stripe"></div>
+    <div class="cmd-bd">
+      <div class="cmd-row1">
+        <div class="cmd-id">CMD-${cmd.id}</div>
+        <div class="cmd-time">🕐 ${cmd.heure || '—'}</div>
+      </div>
+      <div class="cmd-zone">${cmd.zone}</div>
+      <div class="cmd-prod">${cmd.produit} · ${cmd.qte} pièce${cmd.qte > 1 ? 's' : ''}</div>
+      ${cmd.note ? `<div class="cmd-note">📝 ${cmd.note}</div>` : ''}
+      <div class="cmd-money">
+        <div>
+          <div class="money-lbl">À encaisser</div>
+          <div class="money-net">Je reverse : ${cmd.statut === 'livré' ? net.toLocaleString('fr-FR') + ' FCFA' : '—'}</div>
+        </div>
+        <div class="money-val">${cmd.prix.toLocaleString('fr-FR')} FCFA</div>
+      </div>
+      ${cmd.tel ? `<div class="cmd-tel">
+        <div class="tel-box">${cmd.tel}</div>
+        <a class="tel-btn" href="tel:${cmd.tel.replace(/[\s\-]/g,'')}">📞</a>
+      </div>` : ''}
+      ${bottom}
+    </div>`;
+  return div;
+}
+
+// STATUT
+function doStatut(id, statut) {
+  const cmd = cmds.find(c => c.id === id);
+  if (!cmd) return;
+  cmd.statut = statut;
+  if (statut === 'echec') { cmd.depot = true; cmd.montantDepose = -FRAIS; }
+  sendToSheets('upsert_commande', cmd);
+  sendToSheets('log', {user:'Félix', action:'Statut', detail:'CMD-'+id+' → '+statut, statut:statut});
+  saveCmds(); renderAll();
+  const msgs = { livré:'✅ Livraison confirmée !', echec:'❌ Échec enregistré', reporté:'🔄 Commande reportée' };
+  showToast(msgs[statut]);
+  if (statut === 'livré') setTimeout(() => openDepot(id), 350);
+}
+
+// DÉPÔT
+function openDepot(id) {
+  const cmd = cmds.find(c => c.id === id);
+  if (!cmd) return;
+  depotId = id; capSel = null;
+  const net = cmd.prix - COMM;
+  document.getElementById('mTitle').textContent = 'Dépôt — CMD-' + id;
+  document.getElementById('mSub').textContent   = cmd.zone + ' · ' + cmd.produit + ' × ' + cmd.qte;
+  document.getElementById('mVal').textContent   = net.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('mInput').value       = net;
+  document.getElementById('capOui').className   = 'cap';
+  document.getElementById('capNon').className   = 'cap';
+  document.getElementById('depotOverlay').classList.add('open');
+}
+
+function selCap(v) {
+  capSel = v;
+  document.getElementById('capOui').className = 'cap' + (v === 'oui' ? ' sel-ok' : '');
+  document.getElementById('capNon').className = 'cap' + (v === 'non' ? ' sel-no' : '');
+}
+
+function closeModal() {
+  document.getElementById('depotOverlay').classList.remove('open');
+  depotId = null; capSel = null;
+}
+
+function confirmDepot() {
+  if (!capSel) { showToast('⚠️ Précisez si la capture a été envoyée'); return; }
+  const cmd = cmds.find(c => c.id === depotId);
+  if (!cmd) return;
+  cmd.depot = true;
+  cmd.montantDepose = parseInt(document.getElementById('mInput').value) || 0;
+  cmd.capture = capSel === 'oui';
+  const depId = 'DEP-F-' + Date.now();
+  cmd.depotId = depId;
+  const depotObj = {
+    depotId: depId, cmdRef: 'CMD-' + cmd.id,
+    montant: cmd.montantDepose, mode: 'Orange Money',
+    capture: cmd.capture, valide: false,
+    date: new Date().toLocaleDateString('fr-FR'),
+    note: 'Félix — ' + cmd.zone
+  };
+  sendToSheets('upsert_commande', cmd);
+  sendToSheets('upsert_depot', depotObj);
+  sendToSheets('log', {user:'Félix', action:'Dépôt',
+    detail: depId + ' — ' + cmd.montantDepose + ' FCFA',
+    statut: cmd.capture ? 'Capture OK' : 'Sans capture'});
+  saveCmds(); renderAll(); closeModal();
+  showToast(cmd.capture ? '💰 Dépôt + capture confirmés !' : '💰 Dépôt enregistré — envoyez la capture !');
+}
+
+document.getElementById('depotOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('depotOverlay')) closeModal();
+});
+
+// KPIs & ALERT
+function updateKpis() {
+  document.getElementById('kTotal').textContent = cmds.length;
+  document.getElementById('kLiv').textContent   = cmds.filter(c => c.statut === 'livré').length;
+  document.getElementById('kEch').textContent   = cmds.filter(c => c.statut === 'echec').length;
+}
+
+function updateAlert() {
+  const manq = cmds.filter(c => c.statut === 'livré' && !c.depot);
+  const el   = document.getElementById('alertEl');
+  if (manq.length) {
+    el.className = 'alert warn';
+    el.style.display = 'flex';
+    document.getElementById('alertIcon').textContent = '⚠️';
+    document.getElementById('alertIcon').classList.add('pulse');
+    document.getElementById('alertMsg').textContent = `${manq.length} dépôt${manq.length > 1 ? 's' : ''} manquant${manq.length > 1 ? 's' : ''} — effectuez-les maintenant !`;
+  } else if (cmds.filter(c => c.statut === 'livré').length > 0) {
+    el.className = 'alert good';
+    el.style.display = 'flex';
+    document.getElementById('alertIcon').textContent = '✅';
+    document.getElementById('alertIcon').classList.remove('pulse');
+    document.getElementById('alertMsg').textContent = 'Tous les dépôts sont à jour !';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// RAPPORT
+function buildRapport() {
+  const livrees = cmds.filter(c => c.statut === 'livré');
+  const echecs  = cmds.filter(c => c.statut === 'echec');
+  const pieces  = livrees.reduce((s,c) => s + c.qte, 0);
+  const brut    = livrees.reduce((s,c) => s + c.prix, 0);
+  const comm    = livrees.length * COMM;
+  const fEch    = echecs.length * FRAIS;
+  const net     = brut - comm - fEch;
+  const depose  = cmds.filter(c => c.depot && c.montantDepose > 0).reduce((s,c) => s + c.montantDepose, 0);
+  const ecart   = net - depose;
+
+  document.getElementById('rPieces').textContent = pieces;
+  document.getElementById('rBrut').textContent   = brut.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('rComm').textContent   = comm.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('rEch').textContent    = fEch.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('rNet').textContent    = net.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('rEcart').textContent  = ecart.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('rEcart').style.color  = ecart > 0 ? 'var(--red)' : 'var(--green)';
+
+  const now = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+  let lines = [`📊 RAPPORT DU ${now.toUpperCase()}\n`];
+  livrees.forEach(c => lines.push(`- ${c.zone}\nColis livré ✅ = ${c.prix.toLocaleString('fr-FR')} - 1 500 = ${(c.prix-COMM).toLocaleString('fr-FR')} FCFA`));
+  echecs.forEach(c  => lines.push(`- ${c.zone}\nÉchec ❌ = 0 - 500 = -500 FCFA`));
+  if (!livrees.length && !echecs.length) {
+    lines.push('Aucune livraison aujourd\'hui.');
+  } else {
+    lines.push(`\nPièces sorties : ${pieces}`);
+    lines.push(`Total brut : ${brut.toLocaleString('fr-FR')} FCFA`);
+    lines.push(`Commissions : ${comm.toLocaleString('fr-FR')} FCFA`);
+    if (fEch > 0) lines.push(`Frais échecs : ${fEch.toLocaleString('fr-FR')} FCFA`);
+    lines.push(`*Total net : ${net.toLocaleString('fr-FR')} FCFA*`);
+    lines.push(`Déposé : ${depose.toLocaleString('fr-FR')} FCFA`);
+    lines.push(ecart > 0 ? `⚠️ Reste à déposer : ${ecart.toLocaleString('fr-FR')} FCFA` : `✅ Tout a été reversé`);
+  }
+
+  const raw  = lines.join('\n');
+  const html = raw
+    .replace(/(📊 RAPPORT DU [^\n]+)/m, '<span class="hl">$1</span>')
+    .replace(/(Colis livré ✅[^\n]+)/g, '<span class="ok">$1</span>')
+    .replace(/(Échec ❌[^\n]+)/g, '<span class="err">$1</span>')
+    .replace(/(\*Total net[^*]+\*)/g, '<span class="hl">$1</span>')
+    .replace(/(⚠️ Reste[^\n]+)/g, '<span class="err">$1</span>')
+    .replace(/(✅ Tout[^\n]+)/g, '<span class="ok">$1</span>');
+
+  const el = document.getElementById('rptMsg');
+  el.innerHTML = html;
+  el.dataset.raw = raw;
+}
+
+function copyRapport() {
+  const txt = document.getElementById('rptMsg').dataset.raw || document.getElementById('rptMsg').textContent;
+  navigator.clipboard.writeText(txt)
+    .then(() => showToast('📋 Copié ! Collez dans WhatsApp'))
+    .catch(() => showToast('Sélectionnez et copiez manuellement'));
+}
+
+// STOCK
+function adjStock(d) {
+  stock = Math.max(0, stock + d);
+  localStorage.setItem('felix_stock', stock);
+  document.getElementById('stockNum').textContent = stock;
+  buildStock();
+  showToast('📦 Stock : ' + stock + ' pièce' + (stock !== 1 ? 's' : ''));
+}
+function setStockManual() {
+  const v = parseInt(document.getElementById('stockIn').value);
+  if (!isNaN(v) && v >= 0) {
+    stock = v;
+    localStorage.setItem('felix_stock', stock);
+    document.getElementById('stockNum').textContent = stock;
+    document.getElementById('stockIn').value = '';
+    buildStock();
+    showToast('📦 Stock mis à jour : ' + stock + ' pièce' + (stock !== 1 ? 's' : ''));
+  }
+}
+function buildStock() {
+  const livrees = cmds.filter(c => c.statut === 'livré');
+  const pieces  = livrees.reduce((s,c) => s + c.qte, 0);
+  const comm    = livrees.length * COMM;
+  const depose  = cmds.filter(c => c.depot && c.montantDepose > 0).reduce((s,c) => s + c.montantDepose, 0);
+  const manq    = cmds.filter(c => c.statut === 'livré' && !c.depot).length;
+  document.getElementById('wPieces').textContent = pieces;
+  document.getElementById('wComm').textContent   = comm.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('wDepot').textContent  = depose.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('wManque').textContent = manq;
+}
+
+// TOAST
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>

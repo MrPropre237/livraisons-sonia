@@ -1,0 +1,37 @@
+{
+  "name": "Sonia Livraisons",
+  "short_name": "Livraisons",
+  "description": "Gestion des livraisons — Madame Sonia",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1923",
+  "theme_color": "#0f1923",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sonia — Tableau de bord",
+      "url": "./",
+      "description": "Tableau de bord Sonia"
+    },
+    {
+      "name": "Félix — Mes livraisons",
+      "url": "./felix.html",
+      "description": "App livreur Félix"
+    }
+  ]
+}
